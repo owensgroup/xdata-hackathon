@@ -6,3 +6,5 @@ def extract_time(json):
                int(json['_source']['doc']['place']['bounding_box']['coordinates'][0][0][1]))
     except KeyError:
         return 0
+    except TypeError:
+        return 0

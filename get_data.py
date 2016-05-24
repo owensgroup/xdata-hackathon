@@ -18,21 +18,31 @@ for line in open(tweet_file, 'r'):
 urls = []
 #yemen, crisis, sanna, taiz, missile news
 keys = [u'اليمن', u'أزمة', u'صنعاء', u'تعز', u'صاروخ', u'أخبار']
+count = 0
 for item in tweets:
-    text = item['_source']['norm']['body']
+    #text = item['_source']['norm']['body']
+    try:
+        cc = item['_source']['doc']['place']['country_code']
+    except TypeError:
+        continue
     flag = False
-    for key in keys:
-        if key in text:
-            flag = True
-            break
+    if cc == 'YE' or cc=='YEM':
+        count+=1
+        flag = True
+    #for key in keys:
+    #    if key in text:
+    #        flag = True
+    #        break
     #if flag:
-    author = item['_source']['norm']['author']
-    tweetid = item['_source']['doc']['id_str']
-    urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+    #author = item['_source']['norm']['author']
+    #tweetid = item['_source']['doc']['id_str']
+    #urls.append("https://twitter.com/"+author+"/status/"+tweetid)
     if sort_data.extract_time(item) == 0:
         continue
-    sorted_tweets.append(item)
+    if flag:
+        sorted_tweets.append(item)
 
+print count
 #for url in urls:
 #    print url
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
-import copy
 import sort_data
 
 data_dir=[]
@@ -11,6 +10,7 @@ with open('data.conf', 'rb') as f:
 tweet_file = data_dir[0]
 
 tweets = []
+sorted_tweets = []
 for line in open(tweet_file, 'r'):
     tweets.append(json.loads(line))
     #print json.dumps(tweets[0], indent=4, sort_keys=True)
@@ -29,11 +29,11 @@ for item in tweets:
         author = item['_source']['norm']['author']
         tweetid = item['_source']['doc']['id_str']
         urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+		sorted_tweets.append(item)
 
 for url in urls:
     print url
 
-sorted_tweets = copy.deepcopy(tweets)
 sorted_tweets.sort(key=sort_data.extract_time)
 
 for line in sorted_tweets:

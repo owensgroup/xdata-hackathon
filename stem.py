@@ -38,13 +38,15 @@ if __name__ == "__main__":
 	wordhist = tokenize(tweetstr)
 	wordhist = sorted([(k,v) for (v,k) in wordhist.items()], reverse = True) 
 	
+	out = open("output.txt", "w")
 	
-	for i in range(1,100):
-		print(wordhist[i])
+	for i in range(1,200):
+		out.write(str(wordhist[i])+'\n')
+	
+	out.close()
 
 
-
-
+	
 
 
 

@@ -48,6 +48,8 @@ def GenerateTweetString(tweets):
     jsonstr = ''
     for item in tweets:
         text = item['_source']['norm']['body']
+        item['_source']['doc']['bbox_center_x'] = 0
+        item['_source']['doc']['bbox_center_y'] = 0
         flag = False
         for key in keys:
             if key in text:
@@ -68,15 +70,53 @@ def GenerateTweetString(tweets):
                 center_y = int((bottomright_y-topleft_y)/2)
                 item['_source']['doc']['bbox_center_x'] = center_x
                 item['_source']['doc']['bbox_center_y'] = center_y
-            item['_source']['doc']['bbox_center_x'] = 0
-            item['_source']['doc']['bbox_center_y'] = 0
     return jsonstr,sorted_tweets
+
+def GenerateEdgeList(tweets, time_threshold, distance_threshold):
+    edges_time = []
+    edges_distance = []
+    for i in range(len(tweets)-1):
+        item = tweets[i]
+        timestamp = int(item['_source']['doc']['timestamp_ms'])
+        center_x = int(item['_source']['doc']['bbox_center_x'])
+        center_y = int(item['_source']['doc']['bbox_center_y'])
+        j = i + 1
+        timestamp1 = int(tweets[j]['_source']['doc']['timestamp_ms'])
+        while ((abs(timestamp1 - timestamp)) < time_threshold and j < len(tweets)):
+            edges_time.append((i,j))
+            edges_time.append((j,i))
+            if (j+1 < len(tweets)):
+                j += 1
+            else:
+                break
+            timestamp1 = int(tweets[j]['_source']['doc']['timestamp_ms'])
+        j = i + 1
+        center_x1 = int(tweets[j]['_source']['doc']['bbox_center_x'])
+        center_y1 = int(tweets[j]['_source']['doc']['bbox_center_y'])
+        if (center_x1 == 0 and center_y1 == 0):
+            continue
+        distance = abs(center_x1*center_x1 - center_x*center_x)+abs(center_y1*center_y1-center_y*center_y)
+        while (distance < distance_threshold and j < len(tweets)):
+            edges_time.append((i,j))
+            edges_time.append((j,i))
+            if (j+1 < len(tweets)):
+                j += 1
+            else:
+                break
+            center_x1 = int(tweets[j]['_source']['doc']['bbox_center_x'])
+            center_y1 = int(tweets[j]['_source']['doc']['bbox_center_y'])
+    return edges_time, edges_distance
+
 
 def main():
     data_dir = GetDataDirList()
     tweets = GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
     tweetstr,sorted_tweets = GenerateTweetString(tweets)
     sorted_tweets.sort(key=ExtractTime)
+    halfday = 43200000
+    halfcity = 0.005 #sqrt(2.1km)/2
+    edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
+    print len(edges_time), len(edges_distance)
 
 if __name__ == "__main__":
     main()

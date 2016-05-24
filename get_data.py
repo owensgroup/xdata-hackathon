@@ -43,8 +43,8 @@ def GetJsonObj(tweet_file):
 
 def GenerateTweetString(tweets):
     sorted_tweets = []
-    #yemen, crisis, sanna, taiz, aden, missile, news
-    keys = [u'اليمن', u'أزمة', u'صنعاء', u'تعز', u'عدن', u'صاروخ', u'أخبار']
+    #keys = aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
+    keys = [u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
     jsonstr = ''
     for item in tweets:
         text = item['_source']['norm']['body']

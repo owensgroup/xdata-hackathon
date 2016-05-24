@@ -5,17 +5,17 @@ import json
 data_dir=[]
 with open('data.conf', 'rb') as f:
     data_dir = f.read().splitlines()
-
 tweet_file = data_dir[0]
 
 tweets = []
 for line in open(tweet_file, 'r'):
     tweets.append(json.loads(line))
-    #print json.dumps(tweets[0], indent=4, sort_keys=True)
-    #break
+
+
 urls = []
-#yemen, crisis, sanna, taiz, missile news
-keys = [u'اليمن', u'أزمة', u'صنعاء', u'تعز', u'صاروخ', u'أخبار']
+#yemen, crisis, sanna, taiz, aden, missile, news
+keys = [u'اليمن', u'أزمة', u'صنعاء', u'تعز', u'عدن', u'صاروخ', u'أخبار']
+jsonstr = ''
 for item in tweets:
     text = item['_source']['norm']['body']
     flag = False
@@ -24,12 +24,11 @@ for item in tweets:
             flag = True
             break
     if flag:
-        author = item['_source']['norm']['author']
-        tweetid = item['_source']['doc']['id_str']
-        urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+        #author = item['_source']['norm']['author']
+        #tweetid = item['_source']['doc']['id_str']
+        #urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+        jsonstr += (text + ' ')
 
-for url in urls:
-    print url
 
 
 

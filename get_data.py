@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import pylab
 
 data_dir=[]
 with open('data.conf', 'rb') as f:
@@ -9,8 +12,12 @@ with open('data.conf', 'rb') as f:
 tweet_file = data_dir[0]
 
 tweets = []
+count = 0
 for line in open(tweet_file, 'r'):
     tweets.append(json.loads(line))
+    count = count + 1
+    if count > 1000:
+	break
     #print json.dumps(tweets[0], indent=4, sort_keys=True)
     #break
 urls = []
@@ -24,12 +31,22 @@ for item in tweets:
             flag = True
             break
     if flag:
-        author = item['_source']['norm']['author']
-        tweetid = item['_source']['doc']['id_str']
-        urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+        coo = item['_source']['doc']['place']['bounding_box']['coordinates']
+        fig1 = plt.figure()
+    	ax1 = fig1.add_subplot(111, aspect='equal')
+    	print coo
+	ax1.add_patch(
+    		patches.Rectangle(
+       		(coo[0][0], coo[0][1]),   # (x,y)
+       		0.5,          # width
+       		0.5,          # height
+   		fill = False
+		)
+    	)
+    	pylab.ylim([10,30]);
+    	pylab.xlim([30,60]);
+	plt.show()
 
-for url in urls:
-    print url
-
-
+fig1.savefig('rect1.png', dpi=90, bbox_inches='tight')
+    
 

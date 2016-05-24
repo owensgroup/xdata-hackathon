@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import copy
+import sort_data
 
 data_dir=[]
 with open('data.conf', 'rb') as f:
@@ -31,5 +33,10 @@ for item in tweets:
 for url in urls:
     print url
 
+sorted_tweets = copy.deepcopy(tweets)
+sorted_tweets.sort(key=sort_data.extract_time)
 
+for line in sorted_tweets:
+    print(line['_source']['doc']['timestamp_ms'], line['_source']['doc']['place']['bounding_box']['coordinates'][0][0][0],
+          line['_source']['doc']['place']['bounding_box']['coordinates'][0][0][1])
 

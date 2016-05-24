@@ -29,11 +29,7 @@ for item in tweets:
     author = item['_source']['norm']['author']
     tweetid = item['_source']['doc']['id_str']
     urls.append("https://twitter.com/"+author+"/status/"+tweetid)
-    try:
-        extract_time(item)
-    except KeyError:
-        continue
-    except TypeError:
+    if sort_data.extract_time(item) == 0:
         continue
     sorted_tweets.append(item)
 

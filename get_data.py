@@ -29,7 +29,7 @@ for item in tweets:
         author = item['_source']['norm']['author']
         tweetid = item['_source']['doc']['id_str']
         urls.append("https://twitter.com/"+author+"/status/"+tweetid)
-		sorted_tweets.append(item)
+	sorted_tweets.append(item)
 
 for url in urls:
     print url

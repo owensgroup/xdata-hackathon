@@ -45,7 +45,7 @@ def GenerateTweetString(tweets):
     sorted_tweets = []
     #keys = aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
     keys = [u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
-    jsonstr = ''
+    jsonstr = []
     for item in tweets:
         text = item['_source']['norm']['body']
         item['_source']['doc']['bbox_center_x'] = 0
@@ -59,7 +59,7 @@ def GenerateTweetString(tweets):
             #author = item['_source']['norm']['author']
             #tweetid = item['_source']['doc']['id_str']
             #urls.append("https://twitter.com/"+author+"/status/"+tweetid)
-            jsonstr += (text + ' ')
+            jsonstr.append(text)
             sorted_tweets.append(item)
             if item['_source']['doc']['place'] != None and item['_source']['doc']['place']['bounding_box'] != None and item['_source']['doc']['place']['bounding_box']['coordinates'] != None:
                 topleft_x = float(item['_source']['doc']['place']['bounding_box']['coordinates'][0][0][0])

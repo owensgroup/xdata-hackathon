@@ -107,16 +107,67 @@ def GenerateEdgeList(tweets, time_threshold, distance_threshold):
             center_y1 = int(tweets[j]['_source']['doc']['bbox_center_y'])
     return edges_time, edges_distance
 
+def FilterGeoloc(sorted_tweets):
+    geotweets=[]
+    for item in sorted_tweets:
+        try:
+            cc=item['_source']['doc']['coordinates']['coordinates']
+        except TypeError:
+            continue
+        geotweets.append(item)
+    return geotweets
+
+def PlotTwitter(geotweets):
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+    from mpl_toolkits.basemap import Basemap
+
+    # Lambert Conformal Conic map.
+    fig1 = plt.figure()
+    themap = Basemap(projection='gall',
+              llcrnrlon = 35,              # lower-left corner longitude
+              llcrnrlat = 10,               # lower-left corner latitude
+              urcrnrlon = 60,               # upper-right corner longitude
+              urcrnrlat = 25,               # upper-right corner latitude
+              resolution = 'l',
+              area_thresh = 100000.0,
+              )
+
+    themap.drawcoastlines()
+    themap.drawcountries()
+    themap.fillcontinents(color = 'gainsboro')
+    themap.drawmapboundary(fill_color='steelblue')
+
+    for line in geotweets:
+        coo = line['_source']['doc']['coordinates']['coordinates']
+        #ax1 = fig1.add_subplot(111, aspect='equal')
+        #width = coo[2][0]-coo[0][0]
+        #height = coo[2][1]-coo[0][1]
+        #print coo[0][0], coo[0][1], coo[2][0], coo[2][1], width, height
+        #print line['_source']['doc']['place']['full_name']
+        #print width
+        x, y = themap(coo[0],coo[1])
+        if( themap.is_land(x,y)==True ):
+            themap.plot( x, y,
+                'o',                    # marker shape
+                color='Indigo',         # marker colour
+                markersize=4            # marker size
+                )
+
+    plt.show()
+    fig1.savefig('plot.png', bbox_inches='tight')
 
 def main():
     data_dir = GetDataDirList()
     tweets = GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
     tweetstr,sorted_tweets = GenerateTweetString(tweets)
     sorted_tweets.sort(key=ExtractTime)
+    geotweets=FilterGeoloc(sorted_tweets)
+    PlotTwitter(geotweets)
     halfday = 43200000
     halfcity = 0.005 #sqrt(2.1km)/2
     edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
-    print len(edges_time), len(edges_distance)
+    #print len(edges_time), len(edges_distance)
 
 if __name__ == "__main__":
     main()

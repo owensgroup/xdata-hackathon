@@ -147,15 +147,25 @@ def PlotTwitter(geotweets):
         #print line['_source']['doc']['place']['full_name']
         #print width
         x, y = themap(coo[0],coo[1])
-        if( themap.is_land(x,y)==True ):
-            themap.plot( x, y,
-                'o',                    # marker shape
-                color='Indigo',         # marker colour
-                markersize=4            # marker size
-                )
+        #if( themap.is_land(x,y)==True ):
+        themap.plot( x, y,
+            'o',                    # marker shape
+            color='Indigo',         # marker colour
+            markersize=4            # marker size
+            )
 
     plt.show()
     fig1.savefig('plot.png', bbox_inches='tight')
+
+def PrintGeolist( geotweets ):
+    for line in geotweets:
+        #text = line['_source']['norm']['body']
+        author = line['_source']['norm']['author']
+        tweetid = line['_source']['doc']['id_str']
+        print "https://twitter.com/"+author+"/status/"+tweetid
+    #print text will cause UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-4: ordinal not in range(128)
+        #print text
+        print line['_source']['doc']['coordinates']['coordinates']
 
 def main():
     data_dir = GetDataDirList()
@@ -164,6 +174,7 @@ def main():
     sorted_tweets.sort(key=ExtractTime)
     geotweets=FilterGeoloc(sorted_tweets)
     PlotTwitter(geotweets)
+    PrintGeolist(geotweets)
     halfday = 43200000
     halfcity = 0.005 #sqrt(2.1km)/2
     edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)

@@ -69,7 +69,7 @@ def GenerateTelegramString(teles):
     print count
     return textstr,titlestr
 
-def GenerateTweetString2(tweets):
+def GenerateTweetStringHistoric(tweets):
     sorted_tweets = []
     #keys = al-qaeda, aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
     keys = [u'القاعدة', u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
@@ -101,6 +101,7 @@ def GenerateTweetString(tweets):
     keys = [u'القاعدة', u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
     jsonstr = []
     for item in tweets:
+
         text = item['_source']['norm']['body']
         item['_source']['doc']['bbox_center_x'] = 0
         item['_source']['doc']['bbox_center_y'] = 0
@@ -161,17 +162,20 @@ def GenerateEdgeList(tweets, time_threshold, distance_threshold):
             center_y1 = int(tweets[j]['_source']['doc']['bbox_center_y'])
     return edges_time, edges_distance
 
-def FilterGeoloc(sorted_tweets):
+def FilterGeoloc(sorted_tweets,historic):
     geotweets=[]
     for item in sorted_tweets:
         try:
-            cc=item['_source']['doc']['coordinates']['coordinates']
+            if historic==False:
+                cc=item['_source']['doc']['coordinates']['coordinates']
+            else:
+                cc=item['geo']['coordinates']
         except TypeError:
             continue
         geotweets.append(item)
     return geotweets
 
-def PlotTwitter(geotweets):
+def PlotTwitter(geotweets,historic):
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
     from mpl_toolkits.basemap import Basemap
@@ -193,14 +197,18 @@ def PlotTwitter(geotweets):
     themap.drawmapboundary(fill_color='steelblue')
 
     for line in geotweets:
-        coo = line['_source']['doc']['coordinates']['coordinates']
+        if historic==False:
+            coo = line['_source']['doc']['coordinates']['coordinates']
+            x, y = themap(coo[0],coo[1])
+        else:
+            coo = line['geo']['coordinates']
+            x, y = themap(coo[1],coo[0])
         #ax1 = fig1.add_subplot(111, aspect='equal')
         #width = coo[2][0]-coo[0][0]
         #height = coo[2][1]-coo[0][1]
         #print coo[0][0], coo[0][1], coo[2][0], coo[2][1], width, height
         #print line['_source']['doc']['place']['full_name']
         #print width
-        x, y = themap(coo[0],coo[1])
         #if( themap.is_land(x,y)==True ):
         themap.plot( x, y,
             'o',                    # marker shape
@@ -211,26 +219,49 @@ def PlotTwitter(geotweets):
     plt.show()
     fig1.savefig('plot.png', bbox_inches='tight')
 
-def PrintGeolist( geotweets ):
-    for line in geotweets:
-        #text = line['_source']['norm']['body']
-        author = line['_source']['norm']['author']
-        tweetid = line['_source']['doc']['id_str']
-        print "https://twitter.com/"+author+"/status/"+tweetid
-    #print text will cause UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-4: ordinal not in range(128)
+def PrintGeolist( geotweets, historic ):
+    if historic==False:
+        for line in geotweets:
+            #text = line['_source']['norm']['body']
+            author = line['_source']['norm']['author']
+            tweetid = line['_source']['doc']['id_str']
+            print "https://twitter.com/"+author+"/status/"+tweetid
+        #print text will cause UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-4: ordinal not in range(128)
         #print text
-        print line['_source']['doc']['coordinates']['coordinates']
+            print line['_source']['doc']['coordinates']['coordinates']
+    else:
+        for line in geotweets:
+            print line['link']
+            print line['geo']['coordinates']
 
-def ProcessTweets(data_dir):
-    tweets = GetJsonObj(data_dir)
-    tweetstr,sorted_tweets = GenerateTweetString(tweets)
-    sorted_tweets.sort(key=ExtractTime)
-    geotweets=FilterGeoloc(sorted_tweets)
-    PlotTwitter(geotweets)
-    PrintGeolist(geotweets)
+def PrintCSV( geotweets, historic ):
+    f = open('tweet.csv', 'w')
+    if historic==False:
+        for line in geotweets:
+            text = str(line['_source']['doc']['timestamp_ms'])+','+line['_source']['doc']['coordinates']['coordinates'][0]+','+line['_source']['doc']['coordinates']['coordinates'][1]
+            f.write(text)
+    else:
+        for line in geotweets:
+            # Need to get timestamp for historic tweet data
+            text=line['geo']['coordinates'][1]+','+line['geo']['coordinates'][0]
+    f.close()
+
+# ProcessTweets(data_dir,True) to print historic format data
+def ProcessTweets(data_dir,historic=False):
+    if historic==False:
+        tweets = GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
+        tweetstr,sorted_tweets = GenerateTweetString(tweets)
+    else:
+        tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+        tweetstr,sorted_tweets = GenerateTweetStringHistoric(tweets)
+    #sorted_tweets.sort(key=ExtractTime)
+    geotweets=FilterGeoloc(sorted_tweets,historic)
+    PlotTwitter(geotweets,historic)
+    PrintGeolist(geotweets,historic)
+    PrintCSV(geotweets,historic)
     halfday = 43200000
     halfcity = 0.005 #sqrt(2.1km)/2
-    edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
+    #edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
     #print len(edges_time), len(edges_distance)
 
 def ExtractTweets(datadir):
@@ -283,6 +314,8 @@ def ProcessTeles(data_dir):
         f.write('\n')
     f.close()
 
+#data_dir = GetDataDirList()
+#ProcessTweets(data_dir,False)
 def main():
     more_tweets_dir = '/data/xdata-2016/more_tweets/'
     jsonobjs = ExtractTweets(more_tweets_dir)

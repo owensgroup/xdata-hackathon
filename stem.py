@@ -27,13 +27,27 @@ def tokenize(stemstr):
 				wordhist[t] += 1;
 	return wordhist
 
-#wordhist = sorted([wordhist(v,k),for (k,v) in wordhist.items()], reverse = True)
+def tweetstemmer(historic):
+	if historic==False:
+		tweets = gd.GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
+		tweetstr,_ = gd.GenerateTweetString(tweets)
+	else:
+		tweets = gd.GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+		tweetstr, _ = gd.GenerateTweetStringHistoric(tweets)
+	return tweetstr
+
+def telestemmer():
+	teles = gd.GetJsonObj(data_dir[0]+'yemen_telegram_5.22.2016')
+	textstr, _ = GenerateTelegramString(teles)
+	return textstr
+	
+
 
 if __name__ == "__main__":
 	data_dir = gd.GetDataDirList()
 	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-	tweets = gd.GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-	tweetstr, _ = gd.GenerateTweetString(tweets)
+	#tweets = gd.GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+	#tweetstr, _ = gd.GenerateTweetString(tweets)
 	#stemstr = stemm(tweetstr)
 	
 	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
@@ -43,7 +57,17 @@ if __name__ == "__main__":
 	print(len(tweetstr))
 	
 	'''
-	wordhist = tokenize(tweetstr)
+	#process tweets
+	historic = True
+	strlist = tweetstemmer(historic) 
+
+	#process telegram text
+	#strlist = telestemmmer()
+
+	#stem using nlp
+	#strlist = stemm(tweetstr) 
+
+	wordhist = tokenize(strlist)
 	wordhist = sorted([(k,v) for (v,k) in wordhist.items()], reverse = True) 
 	
 	out = open("output.txt", "w")

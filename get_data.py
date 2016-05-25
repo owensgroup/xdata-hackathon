@@ -6,6 +6,14 @@ import os.path
 import gzip
 from sets import Set
 
+from os import listdir
+from os.path import isfile, join
+
+days_since = {'Jan2015':0, 'Feb2015':31, 'Mar2015':31, 'Apr2015':90, 'May2015':120, 'Jun2015':151, 'Jul2015':181, 'Aug2015':212, 'Sep2015':243, 'Oct2015':273, 'Nov2015':304, 'Dec2015':334, 'Jan2016':365, 'Feb2016':394, 'Mar2016':423, 'Apr2016':454, 'May2016':484}
+
+def ReplaceRight(source, target, replacement, replacements=None):
+    return replacement.join(source.rsplit(target, replacements))
+
 def ExtractTime(json):
     try:
         timestamp = int(json['_source']['doc']['timestamp_ms'])
@@ -256,6 +264,46 @@ def ProcessTweets(data_dir,historic=False):
     #edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
     #print len(edges_time), len(edges_distance)
 
+def ExtractTweets(datadir):
+    count = 0
+    without_coord = 0
+    tweets = []
+    fnames = [f for f in listdir(datadir) if isfile(join(datadir,f)) and f[-1] == 'n']
+    for fname in fnames:
+        fullname =  datadir + fname
+        #process json file
+        with open(fullname) as user_tweets:
+            jsonstr = ReplaceRight(user_tweets.read(), ',', '', 1)
+            d = json.loads(jsonstr)
+            for item in d['tweets']:
+                time = item['created_at'].split()
+                count += 1
+                if item['coordinates'] == None:
+                    without_coord += 1
+                    continue
+                if int(time[-1]) < 2015:
+                    continue
+                if days_since[time[1]+time[-1]]+int(time[2])<77:
+                    continue
+                tweets.append(item)
+    print count, without_coord
+    return tweets
+
+def GetTuples(jsonobjs):
+    tuples = []
+    tweets = []
+    idx = 0
+    for item in jsonobjs:
+        uname = item['user']['screen_name']
+        tweet_id = item['id_str']
+        x = float(item['coordinates']['coordinates'][0])
+        y = float(item['coordinates']['coordinates'][1])
+        time = item['created_at'].split()
+        hms = time[3].split(':')
+        t = days_since[time[1]+time[-1]]+int(time[2])*24*60+int(hms[0])*60+int(hms[1])
+        tuples.append((idx, x, y, t))
+        tweets.append((idx, int(tweet_id), uname))
+    return tuples, tweets
 
 def ProcessTeles(data_dir):
     teles = GetJsonObj(data_dir[0]+'yemen_telegram_5.22.2016')
@@ -266,12 +314,15 @@ def ProcessTeles(data_dir):
         f.write('\n')
     f.close()
 
+#data_dir = GetDataDirList()
+#ProcessTweets(data_dir,False)
 def main():
-    data_dir = GetDataDirList()
-    ProcessTweets(data_dir,False)
-    #historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-    #tweetstr,sorted_tweets = GenerateTweetString2(historic_tweets)
-
+    more_tweets_dir = '/data/xdata-2016/more_tweets/'
+    jsonobjs = ExtractTweets(more_tweets_dir)
+    tuples,tweets = GetTuples(jsonobjs)
+    print tuples[0]
+    print tweets[0]
+    print len(tuples)
 
 if __name__ == "__main__":
     main()

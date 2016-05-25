@@ -38,39 +38,32 @@ def tweetstemmer(historic):
 
 def telestemmer():
 	teles = gd.GetJsonObj(data_dir[0]+'yemen_telegram_5.22.2016')
-	textstr, _ = GenerateTelegramString(teles)
+	textstr, _ = gd.GenerateTelegramString(teles)
 	return textstr
 	
 
 
 if __name__ == "__main__":
 	data_dir = gd.GetDataDirList()
-	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-	#tweets = gd.GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-	#tweetstr, _ = gd.GenerateTweetString(tweets)
-	#stemstr = stemm(tweetstr)
-	
-	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-    	#tweetstr,sorted_tweets = GenerateTweetString2(historic_tweets)
-	
-	'''
-	print(len(tweetstr))
-	
-	'''
+
 	#process tweets
 	historic = True
-	strlist = tweetstemmer(historic) 
+	#strlist = tweetstemmer(historic) 
 
 	#process telegram text
-	#strlist = telestemmmer()
+	strlist = telestemmer()
 
 	#stem using nlp
 	#strlist = stemm(tweetstr) 
+	
+	#print(len(strlist))	
 
 	wordhist = tokenize(strlist)
 	wordhist = sorted([(k,v) for (v,k) in wordhist.items()], reverse = True) 
 	
-	out = open("output_histweet500.txt", "w")
+	#out = open("output_histweet500.txt", "w")
+	#out = open("output_tweet500.txt", "w")
+	out = open("output_telegram.txt", "w")
 	
 	for i in range(1,500):
 		out.write(str(wordhist[i])+'\n')

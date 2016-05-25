@@ -4,6 +4,7 @@ import json
 import cPickle
 import os.path
 import gzip
+from sets import Set
 
 def ExtractTime(json):
     try:
@@ -31,16 +32,61 @@ def GetDataDirList():
         data_dir = f.read().splitlines()
     return data_dir
 
-def GetJsonObj(tweet_file):
-    tweets = []
+def GetJsonObj(jsonfile):
+    jsonobjs = []
     #i = 0
-    for line in open(tweet_file, 'r'):
+    for line in open(jsonfile, 'r'):
         #i += 1
-        tweets.append(json.loads(line))
+        jsonobjs.append(json.loads(line))
+        #print json.dumps(jsonobjs[-1], indent=4)
+        #break
         #if i > 10000:
         #    break
-    return tweets
+    return jsonobjs
 
+def GenerateTelegramString(teles):
+    textstr = []
+    titlestr = Set()
+    count = 0
+    for item in teles:
+        if item['_source']['doc'] != None and 'text' in item['_source']['doc']:
+            count += 1
+            text = item['_source']['doc']['text']
+            if 'sender' in item['_source']['doc']:
+                title = item['_source']['doc']['sender']['title']
+            elif 'from' in item['_source']['doc']:
+                title = item['_source']['doc']['from']['title']
+            textstr.append(text)
+            titlestr.add(title)
+    print count
+    return textstr,titlestr
+
+def GenerateTweetString2(tweets):
+    sorted_tweets = []
+    #keys = al-qaeda, aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
+    keys = [u'القاعدة', u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
+    jsonstr = []
+    count = 0
+    for item in tweets:
+        #geo.coordinates
+        #actor.preferredUsername
+        if item['geo']!=None and 'coordinates' in item['geo']:
+            count += 1
+        text = item['body']
+        flag = False
+        for key in keys:
+            if key in text:
+                flag = True
+                break
+        if flag:
+            #author = item['_source']['norm']['author']
+            #tweetid = item['_source']['doc']['id_str']
+            #urls.append("https://twitter.com/"+author+"/status/"+tweetid)
+            jsonstr.append(text)
+            sorted_tweets.append(item)
+    print count
+    return jsonstr,sorted_tweets
+        
 def GenerateTweetString(tweets):
     sorted_tweets = []
     #keys = al-qaeda, aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
@@ -167,9 +213,8 @@ def PrintGeolist( geotweets ):
         #print text
         print line['_source']['doc']['coordinates']['coordinates']
 
-def main():
-    data_dir = GetDataDirList()
-    tweets = GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
+def ProcessTweets(data_dir):
+    tweets = GetJsonObj(data_dir)
     tweetstr,sorted_tweets = GenerateTweetString(tweets)
     sorted_tweets.sort(key=ExtractTime)
     geotweets=FilterGeoloc(sorted_tweets)
@@ -179,6 +224,21 @@ def main():
     halfcity = 0.005 #sqrt(2.1km)/2
     edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)
     #print len(edges_time), len(edges_distance)
+
+
+def ProcessTeles(data_dir):
+    teles = GetJsonObj(data_dir[0]+'yemen_telegram_5.22.2016')
+    textstr,titlestr = GenerateTelegramString(teles)
+    f = open('teles.txt', 'w')
+    for item in textstr:
+        f.write(item.encode("utf-8"))
+        f.write('\n')
+    f.close()
+
+def main():
+    data_dir = GetDataDirList()
+    historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+    tweetstr,sorted_tweets = GenerateTweetString2(historic_tweets)
 
 if __name__ == "__main__":
     main()

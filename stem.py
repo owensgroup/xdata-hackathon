@@ -31,10 +31,18 @@ def tokenize(stemstr):
 
 if __name__ == "__main__":
 	data_dir = gd.GetDataDirList()
-	tweets = gd.GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
+	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+	tweets = gd.GetJsonObj(data_dir[0]+'yemen_historic_tweets')
 	tweetstr, _ = gd.GenerateTweetString(tweets)
 	#stemstr = stemm(tweetstr)
 	
+	#historic_tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
+    	#tweetstr,sorted_tweets = GenerateTweetString2(historic_tweets)
+	
+	'''
+	print(len(tweetstr))
+	
+	'''
 	wordhist = tokenize(tweetstr)
 	wordhist = sorted([(k,v) for (v,k) in wordhist.items()], reverse = True) 
 	
@@ -44,7 +52,7 @@ if __name__ == "__main__":
 		out.write(str(wordhist[i])+'\n')
 	
 	out.close()
-
+	
 
 	
 

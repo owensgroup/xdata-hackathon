@@ -61,7 +61,7 @@ def GenerateTelegramString(teles):
     print count
     return textstr,titlestr
 
-def GenerateTweetString2(tweets):
+def GenerateTweetStringHistoric(tweets):
     sorted_tweets = []
     #keys = al-qaeda, aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
     keys = [u'القاعدة', u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
@@ -117,29 +117,6 @@ def GenerateTweetString(tweets):
                 center_y = int((bottomright_y-topleft_y)/2)
                 item['_source']['doc']['bbox_center_x'] = center_x
                 item['_source']['doc']['bbox_center_y'] = center_y
-    return jsonstr,sorted_tweets
-
-def GenerateTweetStringHistoric(tweets):
-    sorted_tweets = []
-    #keys = al-qaeda, aggression, urgent, peace, saudi arabia, yemeni (people of yemen), houthi, alliance, rocket, yemen, crisis, sanna, taiz, aden, missile, news
-    keys = [u'القاعدة', u'العدوان', u'عاجل', u'امن', u'السعودية', u'اليمنية', u'الحوثي',u'التحالف',u'صاروخ',u'ﺎﻠﻴﻤﻧ', u'ﺃﺰﻣﺓ', u'ﺺﻨﻋﺍﺀ', u'ﺖﻋﺯ', u'ﻉﺪﻧ', u'ﺹﺍﺭﻮﺧ', u'ﺄﺨﺑﺍﺭ']
-    jsonstr = []
-    for item in tweets:
-
-        text = item['body']
-        #item['_source']['doc']['bbox_center_x'] = 0
-        #item['_source']['doc']['bbox_center_y'] = 0
-        flag = False
-        for key in keys:
-            if key in text:
-                flag = True
-                break
-        if flag:
-            #author = item['_source']['norm']['author']
-            #tweetid = item['_source']['doc']['id_str']
-            #urls.append("https://twitter.com/"+author+"/status/"+tweetid)
-            jsonstr.append(text)
-            sorted_tweets.append(item)
     return jsonstr,sorted_tweets
 
 def GenerateEdgeList(tweets, time_threshold, distance_threshold):
@@ -253,24 +230,27 @@ def PrintCSV( geotweets, historic ):
     f = open('tweet.csv', 'w')
     if historic==False:
         for line in geotweets:
-            text = line['_source']['doc']['coordinates']['coordinates'][0]+','+line['_source']['doc']['coordinates']['coordinates'][1]+','+line['_source']['doc']['timestamp_ms']
+            text = str(line['_source']['doc']['timestamp_ms'])+','+line['_source']['doc']['coordinates']['coordinates'][0]+','+line['_source']['doc']['coordinates']['coordinates'][1]
             f.write(text)
     else:
         for line in geotweets:
-            text=line['geo']['coordinates'][1]+','+line['geo']['coordinates'][0]+','+line['geo']
+            # Need to get timestamp for historic tweet data
+            text=line['geo']['coordinates'][1]+','+line['geo']['coordinates'][0]
     f.close()
 
 # ProcessTweets(data_dir,True) to print historic format data
 def ProcessTweets(data_dir,historic=False):
     if historic==False:
         tweets = GetJsonObj(data_dir[0]+'yemen_tweets_5.22.2016')
+        tweetstr,sorted_tweets = GenerateTweetString(tweets)
     else:
         tweets = GetJsonObj(data_dir[0]+'yemen_historic_tweets')
-    tweetstr,sorted_tweets = GenerateTweetStringHistoric(tweets)
+        tweetstr,sorted_tweets = GenerateTweetStringHistoric(tweets)
     #sorted_tweets.sort(key=ExtractTime)
     geotweets=FilterGeoloc(sorted_tweets,historic)
     PlotTwitter(geotweets,historic)
     PrintGeolist(geotweets,historic)
+    PrintCSV(geotweets,historic)
     halfday = 43200000
     halfcity = 0.005 #sqrt(2.1km)/2
     #edges_time, edges_distance = GenerateEdgeList(sorted_tweets, halfday, halfcity)

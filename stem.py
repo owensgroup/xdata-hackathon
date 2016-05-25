@@ -70,9 +70,9 @@ if __name__ == "__main__":
 	wordhist = tokenize(strlist)
 	wordhist = sorted([(k,v) for (v,k) in wordhist.items()], reverse = True) 
 	
-	out = open("output.txt", "w")
+	out = open("output_histweet500.txt", "w")
 	
-	for i in range(1,200):
+	for i in range(1,500):
 		out.write(str(wordhist[i])+'\n')
 	
 	out.close()

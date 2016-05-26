@@ -1,4 +1,4 @@
-mport get_data as gd
+import get_data as gd
 
 def ReadDataLine(filename):
 
@@ -9,5 +9,12 @@ def ReadDataLine(filename):
 
 if __name__ == "__main__":
         data_dir = gd.GetDataDirList()
-        truth = ReadDataLine(data_dir[0] + 'Yemen_Events_Manual.txt')
+        truth = ReadDataLine(data_dir[0] + 'Yemen_Events_Manual.txt')	
+	description = [t[4] for t in truth]
+	out = open("description.txt", "w")
+
+        for item in description:
+                out.write(str(item)+'\n')
+
+        out.close()
         #print(truth)
